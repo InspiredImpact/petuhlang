@@ -52,7 +52,7 @@ class PetuhClass(PetuhObject):
     def __init__(self, cls_name: str, /) -> None:
         self.__cls_name__ = cls_name
 
-    def __call__(self, *, extends: set typing.Set[type, ...] | type | None = None) -> type:
+    def __call__(self, *, extends: typing.Set[type, ...] | type | None = None) -> type:
         if extends is not None:
             wrong_types = _check_class_type(extends)
             raise errors.BadParentClassPassedError(f"Excepted classes for {self.__cls_name__}, got {wrong_types}") if wrong_types
