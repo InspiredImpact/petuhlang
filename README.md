@@ -1,5 +1,10 @@
+# Non-English documentaion
+[Russian | Русский](/docs/Russian.md)
 # SOON (PRE-ALPHA)
 
+## What is petuhlang?
+Petuhlang is a joke-like language, based on Python.
+It updates builtins to make a new syntax based on operators rewrite.
 ## Classes
 ```monkey
 from petuhlang import build
