@@ -36,11 +36,11 @@ __all__: tuple[str, ...] = ("PetuhClass",)
 global_ = sys.modules["builtins"].__dict__
 
 
-def _check_class_type(cls: type, /) -> None:
-    """Checking if the class was passed."""
-    if not isinstance(cls, type):
-        raise errors.BadParentClassPassedError(f"Expected class, got {type(cls)}")
-
+def _check_class_type(classes: typing.Set[type, ...] | type, /) -> str | None:
+    """Checking if the class or classes was passed."""
+    if isinstance(classes, type):
+        return None
+    return "".join([f"{object}({type(object)});" for object in classes if not isinstance(object, type)])
 
 def _create_instance(cls, *args: ArgsType, bindTo: str, **kwargs: KwargsType):
     """Body for classmethod."""
@@ -52,12 +52,13 @@ class PetuhClass(PetuhObject):
     def __init__(self, cls_name: str, /) -> None:
         self.__cls_name__ = cls_name
 
-    def __call__(self, *, extends: type | None = None) -> type:
+    def __call__(self, *, extends: typing.Set[type, ...] | type | None = None) -> type:
         if extends is not None:
-            _check_class_type(extends)
+            wrong_types = _check_class_type(extends)
+            raise errors.BadParentClassPassedError(f"Excepted classes for {self.__cls_name__}, got {wrong_types}") if wrong_types
             bases = (
                 PetuhObject,
-                extends,
+                extends if not isinstance(extends, tuple) else *extends,
             )
         else:
             bases = (PetuhObject,)
