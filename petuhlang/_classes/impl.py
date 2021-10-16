@@ -29,17 +29,25 @@ import typing
 from petuhlang import PetuhObject, errors
 
 if typing.TYPE_CHECKING:
-    from petuhlang.types import ArgsType, KwargsType
+    from petuhlang.types import ArgsType, KwargsType, MaybeNone
+
+    ClsParents = typing.Sequence[type, ...] | type
+
 
 __all__: tuple[str, ...] = ("PetuhClass",)
 
 global_ = sys.modules["builtins"].__dict__
 
 
-def _check_class_type(cls: type, /) -> None:
-    """Checking if the class was passed."""
-    if not isinstance(cls, type):
-        raise errors.BadParentClassPassedError(f"Expected class, got {type(cls)}")
+def _check_cls_parents(cls_name: str, /, *, parents: ClsParents) -> None:
+    """Checking if the class or classes was passed."""
+    if not isinstance(parents, type):
+        if bad_args := "".join(
+            f"{obj}({type(obj)}), " for obj in parents if not isinstance(obj, type)
+        ):
+            raise errors.BadParentClassPassedError(
+                f"Excepted classes for {cls_name}, got {bad_args}"
+            )
 
 
 def _create_instance(cls, *args: ArgsType, bindTo: str, **kwargs: KwargsType):
@@ -48,17 +56,21 @@ def _create_instance(cls, *args: ArgsType, bindTo: str, **kwargs: KwargsType):
     return instance
 
 
+def _concatenate_bases(other: tuple[type, ...] | type) -> tuple[type, ...]:
+    """Concatenating tuples."""
+    if isinstance(other, type):
+        return PetuhObject, other
+    return (PetuhObject,) + other
+
+
 class PetuhClass(PetuhObject):
     def __init__(self, cls_name: str, /) -> None:
         self.__cls_name__ = cls_name
 
-    def __call__(self, *, extends: type | None = None) -> type:
+    def __call__(self, *, extends: MaybeNone[ClsParents] = None) -> type:
         if extends is not None:
-            _check_class_type(extends)
-            bases = (
-                PetuhObject,
-                extends,
-            )
+            _check_cls_parents(self.__cls_name__, parents=extends)
+            bases = _concatenate_bases(extends)
         else:
             bases = (PetuhObject,)
 
