@@ -1,11 +1,11 @@
-# Non-English documentaion
+# Не английская документация
 [Russian | Русский](/docs/Russian.md)
-# SOON (PRE-ALPHA)
+# СКОРО (ПРЕ-АЛЬФА)
 
-## What is petuhlang?
-Petuhlang is a joke-like language, based on Python.
-It updates builtins to make a new syntax based on operators rewrite.
-## Classes
+## Да кто такой этот ваш петухланг?
+Петухланг это шуточный язык, основанный на Питоне.
+Он перегружает builtins чтобы воссоздать синтаксис основанный на перегрузке операторов.
+## Классы
 ```monkey
 from petuhlang import build
 build.using >> "petuhlang"
@@ -24,14 +24,14 @@ function >> main(
     kwarg("greeting", value="Hello") >> str,
 ) [
     MyClass.createInstance(bindTo="instance") >> then [
-        console.log(f"It works:) -> {instance.__class__.__name__}")
+        console.log(f"Оно живое! -> {instance.__class__.__name__}")
     ]
 ]
 
 main()
 ```
 
-## Base functions
+## Основные функции
 ```monkey
 from petuhlang import build
 build.using >> "petuhlang"
