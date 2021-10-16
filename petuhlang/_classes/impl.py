@@ -29,7 +29,7 @@ import typing
 from petuhlang import PetuhObject, errors
 
 if typing.TYPE_CHECKING:
-    from petuhlang.types import ArgsType, KwargsType
+    from petuhlang.types import ArgsType, KwargsType, MaybeNone
 
     ClsParents = typing.Sequence[type, ...] | type
 __all__: tuple[str, ...] = ("PetuhClass",)
@@ -37,12 +37,12 @@ __all__: tuple[str, ...] = ("PetuhClass",)
 global_ = sys.modules["builtins"].__dict__
 
 
-def _check_class_type(cls: typing.ClassVar, classes: ClsParents, /) -> str | None:
+def _check_class_type(cls: typing.ClassVar, parents: ClsParents, /) -> None:
     """Checking if the class or classes was passed."""
-    if isinstance(classes, type) or all([isinstance(object, type) for object in classes ]):
+    if isinstance(parents, type) or all([isinstance(object, type) for object in parents ]):
         return None
-    wrong_types = "".join([f"{object}({type(object)});" for object in classes if not isinstance(object, type)])
-    raise errors.BadParentClassPassedError(f"Excepted classes for {cls.__cls_name__}, got {wrong_types}")
+    wrong_types = "".join([f"{object}({type(object)});" for object in parents if not isinstance(object, type)])
+    raise errors.BadParentClassPassedError(f"Excepted parent classes for {cls.__cls_name__}, got {wrong_types}")
 
 
 def _create_instance(cls, *args: ArgsType, bindTo: str, **kwargs: KwargsType):
@@ -61,7 +61,7 @@ def _combine_tuple_with_types(start_tuple: tuple[typing.Hashable], add_to_tuple:
     elif issubclass(adding_type, typing.Sequence):
         start_tuple += tuple(add_to_tuple)
     return start_tuple
-def _make_class(cls: typing.ClassVar, bases: tuple[ClsParents], *args: ArgsType, **kwargs: KwargsType) -> type:
+def _make_class(cls: typing.ClassVar, bases: MaybeNone[ClsParents], *args: ArgsType, **kwargs: KwargsType) -> type:
     """Makes a new class of known info"""
     return type(
         cls.__cls_name__,
