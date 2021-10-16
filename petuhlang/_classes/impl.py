@@ -29,25 +29,20 @@ import typing
 from petuhlang import PetuhObject, errors
 
 if typing.TYPE_CHECKING:
-    from petuhlang.types import ArgsType, KwargsType, MaybeNone
+    from petuhlang.types import ArgsType, KwargsType
 
     ClsParents = typing.Sequence[type, ...] | type
-
-
 __all__: tuple[str, ...] = ("PetuhClass",)
 
 global_ = sys.modules["builtins"].__dict__
 
 
-def _check_cls_parents(cls_name: str, /, *, parents: ClsParents) -> None:
+def _check_class_type(cls: typing.ClassVar, classes: ClsParents, /) -> str | None:
     """Checking if the class or classes was passed."""
-    if not isinstance(parents, type):
-        if bad_args := "".join(
-            f"{obj}({type(obj)}), " for obj in parents if not isinstance(obj, type)
-        ):
-            raise errors.BadParentClassPassedError(
-                f"Excepted classes for {cls_name}, got {bad_args}"
-            )
+    if isinstance(classes, type) or all([isinstance(object, type) for object in classes ]):
+        return None
+    wrong_types = "".join([f"{object}({type(object)});" for object in classes if not isinstance(object, type)])
+    raise errors.BadParentClassPassedError(f"Excepted classes for {cls.__cls_name__}, got {wrong_types}")
 
 
 def _create_instance(cls, *args: ArgsType, bindTo: str, **kwargs: KwargsType):
@@ -56,32 +51,38 @@ def _create_instance(cls, *args: ArgsType, bindTo: str, **kwargs: KwargsType):
     return instance
 
 
-def _concatenate_bases(other: tuple[type, ...] | type) -> tuple[type, ...]:
-    """Concatenating tuples."""
-    if isinstance(other, type):
-        return PetuhObject, other
-    return (PetuhObject,) + other
+def _combine_tuple_with_types(start_tuple: tuple[typing.Hashable], add_to_tuple: typing.Sequence[typing.Hashable] | typing.Hashable) -> tuple[typing.Hashable]:
+    """Tuple's variants of combinations"""
+    adding_type = type(add_to_tuple)
+    if issubclass(adding_type, tuple):
+        start_tuple += add_to_tuple
+    elif issubclass(adding_type, typing.Hashable):
+        start_tuple += tuple([add_to_tuple])
+    elif issubclass(adding_type, typing.Sequence):
+        start_tuple += tuple(add_to_tuple)
+    return start_tuple
+def _make_class(cls: typing.ClassVar, bases: tuple[ClsParents], *args: ArgsType, **kwargs: KwargsType) -> type:
+    """Makes a new class of known info"""
+    return type(
+        cls.__cls_name__,
+        bases,
+        {
+            "createInstance": classmethod(_create_instance),
+            "__init__": lambda self_, *args, **kwargs: None,
+        },
+    )
 
 
 class PetuhClass(PetuhObject):
     def __init__(self, cls_name: str, /) -> None:
         self.__cls_name__ = cls_name
 
-    def __call__(self, *, extends: MaybeNone[ClsParents] = None) -> type:
+    def __call__(self, *, extends: tuple[ClsParents] | None = None) -> type:
+        bases = (PetuhObject,)
         if extends is not None:
-            _check_cls_parents(self.__cls_name__, parents=extends)
-            bases = _concatenate_bases(extends)
-        else:
-            bases = (PetuhObject,)
-
-        cls = type(
-            self.__cls_name__,
-            bases,
-            {
-                "createInstance": classmethod(_create_instance),
-                "__init__": lambda self_, *args, **kwargs: None,
-            },
-        )
+            _check_class_type(self, extends)
+            bases = _combine_tuple_with_types(bases, extends)
+        cls = _make_class(self, bases)
         global_[self.__cls_name__] = cls
 
         return cls
