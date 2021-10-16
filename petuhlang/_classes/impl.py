@@ -77,7 +77,7 @@ class PetuhClass(PetuhObject):
     def __init__(self, cls_name: str, /) -> None:
         self.__cls_name__ = cls_name
 
-    def __call__(self, *, extends: tuple[ClsParents] | None = None) -> type:
+    def __call__(self, *, extends: MaybeNone[ClsParents] | None = None) -> type:
         bases = (PetuhObject,)
         if extends is not None:
             _check_class_type(self, extends)
